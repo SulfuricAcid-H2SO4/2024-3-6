@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+　<head>
+　　<meta charset="utf-8">
+　　<title>サイトタイトル</title>
+　</head>
+　<body>
+　　<div id = "canvas1">
+　　</div>
+　　<style>
+　　　video {
+　　　display:none
+　　}
+　　</style>
+　　<script>
+　　const video = document.createElement("video")
+　　video.id = "video"
+　　let media = navigator.mediaDevices.getUserMedia({video: {facingMode:"environment" }, audio: false})
+　　.then(stream => {video.srcObject = stream; video.play()}).catch(e => {console.log(e)}) //カメラ要素の作成
+
+　　const canvas = document.createElement("canvas");
+　　canvas.id = "canvas"
+　　canvas.width = 1320
+　　canvas.height = 440
+　　document.getElementById("canvas1").appendChild(canvas)
+　　let ctx = canvas.getContext("2d"); //画面右側のキャンバス要素を作成
+　　let a=0,x=0,y=0,i=0
+　　let total =new Array(10) //変数などの定義
+
+　　function syokika(){ //ループ時に初期化
+　　　red= new Array(44);
+　　　for(let z = 0; z < 44; z++) {
+　　　　red[z] = new Array(66).fill(0);
+　　　}
+　　}
+　　syokika()
+
+　　function RedSearch(){ //メイン
+　　　let imagedata = ctx.getImageData(x,y,10,10) //色の検出
+　　　if(imagedata.data[48] > 100 && imagedata.data[50]<130 &&imagedata.data[48]-imagedata.data[50]>40){//条件文
+　　　　ctx.beginPath();
+　　　　ctx.rect(x+660,y,10,10)
+　　　　ctx.fillStyle = "orange";
+　　　　ctx.fill()
+　　　　ctx.closePath(); //赤を検出したところに、オレンジのマスを描画
+　　　　red[y/10][x/10] = 1 //配列redに登録
+　　　}else{
+　　　　red[y/10][x/10] = 0 //描画せずに、配列redに登録
+　　　}
+　　　a += 10
+　　　x = a % 660 //x座標の決定
+　　　y = Math.floor(a / 660)*10 //y座標の決定
+　　　if(y == 430 && x == 650){
+　　　　ctx.clearRect(660,0,1320,440) //画面のリセット
+　　　　a = 0
+　　　　y = 0
+　　　　x = 0 //変数のリセット
+　　　　var REDs =red.flat(Infinity); //二次元配列redを一次元配列にする
+　　　　total[i] = REDs.reduce(function(sum, element){
+ 　　　　 return sum + element; //オレンジのマスの合計値を計算
+　　　　}, 0);
+　　　　syokika() //配列redの初期化
+　　　　console.log(total) //合計値の出力
+　　　　if(i>0){
+　　　　　if(total[i]-total[i-1]>30||total[i]-total[i-1]<-30){
+　　　　　　console.log("違いが発見されました！") //合計値の差が30以上の場合出力
+　　　　　}else{
+　　　　　　console.log(total[i]-total[i-1])
+　　　　　}
+　　　　}
+　　　　i+=1
+　　　}
+　　}
+　　function Draw(){
+　　　ctx.drawImage(video,0,0,660,440)
+　　　requestAnimationFrame(Draw); //カメラの映像を映す
+　　}
+　　Draw()
+　　const interval = setInterval(RedSearch,0.1) //処理をループする
+　　//参考文献　株式会社アールエフェクト　IT初心者スキルアップブログ　より　https://reffect.co.jp/html/javascript-webcamera
+　　//参考文献　プチモンテ　https://www.petitmonte.com/javascript/get_image_color..html
+　　</script>
+　</body>
+</html>
